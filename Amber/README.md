@@ -25,3 +25,9 @@ This will generate the following files
 
 These will be used to run the GB (``*.gas.*``) and PME (``*.pbc.*``)
 comparisons, respectively.
+
+Comparing Energies
+==================
+
+The Python script ``compare.py`` will evaluate energies using Amber and OpenMM
+and put the results in a table.  Use the ``--help`` flag for help.
