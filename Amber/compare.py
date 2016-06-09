@@ -83,6 +83,7 @@ omm_f = con.getState(getForces=True).getForces(asNumpy=True).value_in_unit(u.kil
 # Now do the comparisons
 print('%-20s | %-15s | %-15s' % ('Component', 'OpenMM', 'Amber'))
 print('-'*56)
+total = 0
 for name, oe in omm_e:
     if name == 'HarmonicBondForce':
         term, ae = 'Bond', e.bond
@@ -96,12 +97,26 @@ for name, oe in omm_e:
         term, ae = 'GB', e.egb
     else:
         continue
+    total += oe
     print('%-20s | %15.6f | %15.6f' % (term, ae, oe))
+print('%-20s | %15.6f | %15.6f' % ('Total', e.tot, total))
+print('-'*56)
+print('-'*56)
 
 # Now compare forces
 proj = (f * omm_f).sum(axis=1) / (omm_f * omm_f).sum(axis=1)
+ref = np.sqrt((omm_f**2).sum(axis=1))
+reldiff = np.sqrt(((f - omm_f)**2).sum(axis=1)) / ref
+maxdiff = reldiff.max()
+meandiff = reldiff.mean()
+mediandiff = np.median(reldiff)
 
+print('Max Relative F diff:    %15.6E' % maxdiff)
+print('Mean Relative F diff:   %15.6E' % meandiff)
+print('Median Relative F diff: %15.6E' % mediandiff)
+print('-'*56)
 print('Projection of Amber and OpenMM force:')
+print('-'*56)
 print('Average: %15.6f' % proj.mean())
 print('Min:     %15.6f' % proj.min())
 print('Max:     %15.6f' % proj.max())
