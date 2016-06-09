@@ -26,11 +26,11 @@ EOF
 echo "Creating the DHFR topology file"
 tleap -f - << EOF
 source leaprc.protein.ff14SB
-source leaprc.water.tip4pew
+source leaprc.water.tip3p
 sys = loadPDB 4m6j_fixed.pdb
 set default pbradii mbondi3
 saveAmberParm sys dhfr.dry.parm7 dhfr.dry.rst7
-solvateOct sys TIP4PEWBOX 15.0
+solvateOct sys TIP3PBOX 15.0
 addIonsRand sys NA 20 CL 20
 saveAmberParm sys dhfr.pbc.parm7 dhfr.pbc.rst7
 quit
@@ -39,11 +39,11 @@ EOF
 echo "Creating the hairpin RNA topology file"
 tleap -f - << EOF
 source leaprc.RNA.OL3
-source leaprc.water.tip4pew
+source leaprc.water.tip3p
 sys = loadPDB 2koc_fixed.pdb
 set default pbradii mbondi3
 saveAmberParm sys 2koc.dry.parm7 2koc.dry.rst7
-solvateOct sys TIP4PEWBOX 15.0
+solvateOct sys TIP3PBOX 15.0
 addIonsRand sys NA 20 CL 20
 saveAmberParm sys 2koc.pbc.parm7 2koc.pbc.rst7
 quit

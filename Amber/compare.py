@@ -39,9 +39,11 @@ args = parser.parse_args()
 if args.pbc:
     inp = sander.pme_input()
     inp.cut = args.cutoff
+    inp.ntc = inp.ntf = 1
 else:
     inp = sander.gas_input(args.igb)
     inp.cut = 1000
+    inp.rgbmax = 1000
 
 with sander.setup(args.prmtop, args.inpcrd, None, inp) as context:
     e, f = sander.energy_forces()
@@ -65,23 +67,25 @@ else:
 
 system = parm.createSystem(nonbondedMethod=nonbondedMethod,
                            nonbondedCutoff=args.cutoff*u.angstroms,
-                           implicitSolvent=gbmap[args.igb])
+                           implicitSolvent=gbmap[args.igb],
+                           constraints=None, rigidWater=False)
+if args.pbc:
+    system.setDefaultPeriodicBoxVectors(*inpcrd.boxVectors)
 
 pmdparm = pmd.load_file(args.prmtop, args.inpcrd)
 omm_e = pmd.openmm.energy_decomposition_system(pmdparm, system,
                                                platform=args.platform)
-
 # Generate the context and get the Force
 con = mm.Context(system, mm.VerletIntegrator(1*u.femtoseconds),
                  mm.Platform.getPlatformByName(args.platform))
-if args.pbc:
-    con.setPeriodicBoxVectors(*inpcrd.box_vectors)
+#if args.pbc:
+#    con.setPeriodicBoxVectors(*inpcrd.boxVectors)
 con.setPositions(inpcrd.positions)
 
 omm_f = con.getState(getForces=True).getForces(asNumpy=True).value_in_unit(u.kilocalories_per_mole/u.angstroms)
 
 # Now do the comparisons
-print('%-20s | %-15s | %-15s' % ('Component', 'OpenMM', 'Amber'))
+print('%-20s | %-15s | %-15s' % ('Component', 'Amber', 'OpenMM'))
 print('-'*56)
 total = 0
 for name, oe in omm_e:
@@ -93,8 +97,8 @@ for name, oe in omm_e:
         term, ae = 'Dihedral', e.dihedral
     elif name == 'NonbondedForce':
         term, ae = 'Nonbonded', e.elec+e.vdw+e.elec_14+e.vdw_14
-    elif name == 'CustomGBForce':
-        term, ae = 'GB', e.egb
+    elif name in ('CustomGBForce', 'GBSAOBCForce'):
+        term, ae = 'GB', e.gb
     else:
         continue
     total += oe
