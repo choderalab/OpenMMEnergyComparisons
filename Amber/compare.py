@@ -94,7 +94,7 @@ for name, oe in omm_e:
     elif name == 'NonbondedForce':
         term, ae = 'Nonbonded', e.elec+e.vdw+e.elec_14+e.vdw_14
     elif name == 'CustomGBForce':
-        term, ae = 'GB', e.egb
+        term, ae = 'GB', e.gb
     else:
         continue
     total += oe
