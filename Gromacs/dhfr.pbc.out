@@ -1,0 +1,22 @@
+Using double precision GROMACS version 4
+Usage: test.py conf.gro topol.top grompp.mdp
+Defines: {'FLEXIBLE': 1}
+Constraints None
+Component            | Gromacs         | OpenMM         
+--------------------------------------------------------
+Bond                 |     2018.819010 |     2018.819010
+Angle                |     1646.318442 |     1646.318442
+Dihedral             |     8847.376952 |     8847.376952
+Nonbonded            |  -433430.513264 |  -433464.053590
+Total                |  -420917.998859 |  -420951.539186
+--------------------------------------------------------
+--------------------------------------------------------
+Max Relative F diff:       1.857365E-03
+Mean Relative F diff:      3.056439E-05
+Median Relative F diff:    2.500964E-05
+--------------------------------------------------------
+Projection of Gromacs and OpenMM force:
+--------------------------------------------------------
+Average:        0.999999
+Min:            0.999423
+Max:            1.000382

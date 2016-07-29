@@ -16,3 +16,10 @@ AMBER Systems
 The AMBER files are converted using ParmEd.  The ``convert.sh`` file will run
 ``convert_amber.py`` twice on the two solvated systems in the Amber directory to
 generate the GROMACS topology and GRO files here.
+
+GROMACS comparison
+------------------
+
+The comparison requires a .gro file, .top file and .mdp file.  The .mdp file
+contains MD simulation settings and were copied from ParmEd/GmxTests.  
+To run the test, use "python test.py conf.gro topol.top grompp.mdp".
