@@ -1,4 +1,3 @@
-define          = -DFLEXIBLE
 integrator	= md
 dt		= 0.001
 nsteps		= 0		; Maximum number of (minimization) steps to perform
