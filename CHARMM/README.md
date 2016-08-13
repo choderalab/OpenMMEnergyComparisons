@@ -54,3 +54,7 @@ After starting the Docker daemon, run
 ```
 docker build -t omnia/charmm-lite:c40b1 .
 ```
+
+Running CHARMM
+--------------
+The CHARMM executable is `/charmm/c40b1_gnu/exec/gnu/charmm`
