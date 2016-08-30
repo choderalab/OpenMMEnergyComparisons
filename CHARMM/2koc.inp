@@ -6,7 +6,7 @@ DIMENS CHSIZE 2000000
 !DIMENS CHSIZE 1000000
 
 ! Read topology and parameter files
-stream toppar.str
+stream toppar/toppar.str
 
 ! Read PSF
 open read unit 10 card name 2koc/step3_pbcsetup.psf
@@ -57,6 +57,8 @@ IMAGE BYRESID XCEN @xcen YCEN @ycen ZCEN @zcen sele ( segid @posid .or. segid @n
 nbonds atom vatom vswitch -
        ctonnb 10.0 ctofnb 12.0 cutnb 16.0 cutim 16.0 -
        inbfrq -1 imgfrq -1 wmin 1.0 cdie eps 1.0 -
-       ewald pmew fftx @fftx ffty @ffty fftz @fftz  kappa .34 spline order 5
+!       ewald pmew fftx @fftx ffty @ffty fftz @fftz  kappa .34 spline order 5
+       ewald pmew fftx @fftx ffty @ffty fftz @fftz  kappa 0.45657567972 spline order 5
+
 energy
 stop

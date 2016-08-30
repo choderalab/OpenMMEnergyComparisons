@@ -23,9 +23,21 @@ for force in system.getForces():
         #print('NonbondedForce: %s' % force.getUseSwitchingFunction())
         #print('LRC? %s' % force.getUseDispersionCorrection())
         force.setUseDispersionCorrection(False)
+        force.setPMEParameters(1.0/0.34, 90, 90, 90)
 pmdparm = pmd.load_file('step3_pbcsetup.psf')
 pmdparm.positions = crd.positions
 pmdparm.box = [80, 80, 80, 90, 90, 90]
+
+# Print PME parameters
+integrator = mm.VerletIntegrator(1.0 * u.femtoseconds)
+context = mm.Context(system, integrator)
+context.setPositions(crd.positions)
+for force in system.getForces():
+    if isinstance(force, mm.NonbondedForce):
+        break
+integrator.step(1)
+print(force.getPMEParametersInContext(context))
+del context, integrator
 
 # CHARMM energy: From docker evaluation
 # TODO: Pull these components in with a Python script.
@@ -73,7 +85,7 @@ print('%-20s | %-15s | %-15s' % ('Component', 'CHARMM', 'OpenMM'))
 print('-'*56)
 total = 0
 for name in ['Bond', 'Angle', 'Dihedral', 'Nonbonded']:
-    print('%-20s | %15.6f | %15.6f' % (name, charmm_energy[name], openmm_energy[name]))
+    print('%-20s | %15.2f | %15.2f' % (name, charmm_energy[name] * 4.184, openmm_energy[name] * 4.184))
 print('-'*56)
-print('%-20s | %15.6f | %15.6f' % ('Total', charmm_energy['Total'] * 4.184, openmm_energy['Total'] * 4.184))
+print('%-20s | %15.2f | %15.2f' % ('Total', charmm_energy['Total'] * 4.184, openmm_energy['Total'] * 4.184))
 print('-'*56)

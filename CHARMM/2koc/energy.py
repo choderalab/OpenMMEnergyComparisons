@@ -23,13 +23,28 @@ for force in system.getForces():
         #print('NonbondedForce: %s' % force.getUseSwitchingFunction())
         #print('LRC? %s' % force.getUseDispersionCorrection())
         force.setUseDispersionCorrection(False)
+        force.setPMEParameters(1.0/0.34, 72, 72, 72)
 pmdparm = pmd.load_file('step3_pbcsetup.psf')
 pmdparm.positions = crd.positions
 pmdparm.box = [63, 63, 63, 90, 90, 90]
 
+# Print PME parameters
+integrator = mm.VerletIntegrator(1.0 * u.femtoseconds)
+context = mm.Context(system, integrator)
+context.setPositions(crd.positions)
+for force in system.getForces():
+    if isinstance(force, mm.NonbondedForce):
+        break
+integrator.step(1)
+print(force.getPMEParametersInContext(context))
+del context, integrator
+
+
 # CHARMM energy: From docker evaluation
 # TODO: Pull these components in with a Python script.
 """
+Default Ewald kappa:
+
 ENER ENR:  Eval#     ENERgy      Delta-E         GRMS
 ENER INTERN:          BONDs       ANGLes       UREY-b    DIHEdrals    IMPRopers
 ENER EXTERN:        VDWaals         ELEC       HBONds          ASP         USER
@@ -44,7 +59,7 @@ ENER EWALD>      1706.56070-512279.28667 497353.85428      0.00000      0.00000
  ----------       ---------    ---------    ---------    ---------    ---------
 """
 charmm_energy = dict()
-charmm_energy['Bond'] = 3220.73435 
+charmm_energy['Bond'] = 3220.73435
 charmm_energy['Angle'] = 2153.87430    + 86.79342
 charmm_energy['Dihedral'] = 473.71332 + 0.91605
 charmm_energy['Nonbonded'] = 10734.99706 -81661.12324 + 165.68305  -3570.40512 + 1706.56070 -512279.28667 + 497353.85428
@@ -72,7 +87,7 @@ print('%-20s | %-15s | %-15s' % ('Component', 'CHARMM', 'OpenMM'))
 print('-'*56)
 total = 0
 for name in ['Bond', 'Angle', 'Dihedral', 'Nonbonded']:
-    print('%-20s | %15.6f | %15.6f' % (name, charmm_energy[name], openmm_energy[name]))
+    print('%-20s | %15.2f | %15.2f' % (name, charmm_energy[name] * 4.184, openmm_energy[name] * 4.184))
 print('-'*56)
-print('%-20s | %15.6f | %15.6f' % ('Total', charmm_energy['Total'] * 4.184, openmm_energy['Total'] * 4.184))
+print('%-20s | %15.2f | %15.2f' % ('Total', charmm_energy['Total'] * 4.184, openmm_energy['Total'] * 4.184))
 print('-'*56)
