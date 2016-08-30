@@ -58,3 +58,12 @@ docker build -t omnia/charmm-lite:c40b1 .
 Running CHARMM
 --------------
 The CHARMM executable is `/charmm/c40b1_gnu/exec/gnu/charmm`
+
+To manually start the docker image:
+```
+docker run -i -t omnia/charmm-lite:c40b1 /bin/bash
+```
+To run the comparison:
+```
+docker run -i -v `pwd`/2koc-charmm-gui:/mnt -t omnia/charmm-lite:c40b1 /mnt/compute-energy.sh
+```
