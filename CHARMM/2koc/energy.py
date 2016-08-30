@@ -6,9 +6,9 @@ from simtk.openmm import app
 
 psf = app.CharmmPsfFile('step3_pbcsetup.psf')
 # Taken from output of CHARMM run
-psf.setBox(8*u.nanometers, 8*u.nanometers, 8*u.nanometers)
+psf.setBox(6.3*u.nanometers, 6.3*u.nanometers, 6.3*u.nanometers)
 crd = app.CharmmCrdFile('step3_pbcsetup.crd')
-params = app.CharmmParameterSet('toppar/par_all36_prot.prm',
+params = app.CharmmParameterSet('toppar/par_all36_na.prm',
                                 'toppar/toppar_water_ions.str')
 
 system = psf.createSystem(params, nonbondedMethod=app.PME,
@@ -25,31 +25,30 @@ for force in system.getForces():
         force.setUseDispersionCorrection(False)
 pmdparm = pmd.load_file('step3_pbcsetup.psf')
 pmdparm.positions = crd.positions
-pmdparm.box = [80, 80, 80, 90, 90, 90]
+pmdparm.box = [63, 63, 63, 90, 90, 90]
 
 # CHARMM energy: From docker evaluation
 # TODO: Pull these components in with a Python script.
 """
 ENER ENR:  Eval#     ENERgy      Delta-E         GRMS
 ENER INTERN:          BONDs       ANGLes       UREY-b    DIHEdrals    IMPRopers
-ENER CROSS:           CMAPs        PMF1D        PMF2D        PRIMO
 ENER EXTERN:        VDWaals         ELEC       HBONds          ASP         USER
 ENER IMAGES:        IMNBvdw       IMELec       IMHBnd       RXNField    EXTElec
 ENER EWALD:          EWKSum       EWSElf       EWEXcl       EWQCor       EWUTil
  ----------       ---------    ---------    ---------    ---------    ---------
-ENER>        0-163043.99835      0.00000      5.02279
-ENER INTERN>     6337.99813   4236.12181     54.30685   1726.66813     21.86301
-ENER CROSS>       -21.48984      0.00000      0.00000      0.00000
-ENER EXTERN>    20161.20647-164737.82886      0.00000      0.00000      0.00000
-ENER IMAGES>      243.39096  -5318.48694      0.00000      0.00000      0.00000
-ENER EWALD>       4130.5989-1021718.0599  991839.7129       0.0000       0.0000
+ENER>        0 -81613.68849      0.00000      5.11347
+ENER INTERN>     3220.73435   2153.87430     86.79342    473.71332      0.91605
+ENER EXTERN>    10734.99706 -81661.12324      0.00000      0.00000      0.00000
+ENER IMAGES>      165.68305  -3570.40512      0.00000      0.00000      0.00000
+ENER EWALD>      1706.56070-512279.28667 497353.85428      0.00000      0.00000
+ ----------       ---------    ---------    ---------    ---------    ---------
 """
 charmm_energy = dict()
-charmm_energy['Bond'] = 6337.99813
-charmm_energy['Angle'] = 4236.12181 + 54.30685
-charmm_energy['Dihedral'] = 1726.66813 + 21.86301 + -21.48984
-charmm_energy['Nonbonded'] = 20161.20647 + -164737.82886 + 243.39096  -5318.48694 + 4130.5989 -1021718.0599 + 991839.7129
-charmm_energy['Total'] = -163043.99835
+charmm_energy['Bond'] = 3220.73435 
+charmm_energy['Angle'] = 2153.87430    + 86.79342
+charmm_energy['Dihedral'] = 473.71332 + 0.91605
+charmm_energy['Nonbonded'] = 10734.99706 -81661.12324 + 165.68305  -3570.40512 + 1706.56070 -512279.28667 + 497353.85428
+charmm_energy['Total'] = -81613.68849
 
 total = 0.0
 for key in ['Bond', 'Angle', 'Dihedral', 'Nonbonded']:

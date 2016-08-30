@@ -62,8 +62,13 @@ The CHARMM executable is `/charmm/c40b1_gnu/exec/gnu/charmm`
 To manually start the docker image:
 ```
 docker run -i -t omnia/charmm-lite:c40b1 /bin/bash
+
+Running comparison
+------------------
 ```
-To run the comparison:
+To run the comparison from this directory:
 ```
 docker run -i -v `pwd`:/mnt -t omnia/charmm-lite:c40b1 /mnt/dhfr.sh
+docker run -i -v `pwd`:/mnt -t omnia/charmm-lite:c40b1 /mnt/2koc.sh
 ```
+Edit `dhfr/energy.py` and `2koc/energy.py` to paste in energy components, and run these scripts.
