@@ -74,5 +74,5 @@ total = 0
 for name in ['Bond', 'Angle', 'Dihedral', 'Nonbonded']:
     print('%-20s | %15.6f | %15.6f' % (name, charmm_energy[name], openmm_energy[name]))
 print('-'*56)
-print('%-20s | %15.6f | %15.6f' % ('Total', charmm_energy['Total'], openmm_energy['Total']))
+print('%-20s | %15.6f | %15.6f' % ('Total', charmm_energy['Total'] * 4.184, openmm_energy['Total'] * 4.184))
 print('-'*56)
