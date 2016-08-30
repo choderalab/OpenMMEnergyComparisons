@@ -27,6 +27,52 @@ pmdparm = pmd.load_file('step3_pbcsetup.psf')
 pmdparm.positions = crd.positions
 pmdparm.box = [80, 80, 80, 90, 90, 90]
 
+# CHARMM energy: From docker evaluation
+# TODO: Pull these components in with a Python script.
+"""
+ENER ENR:  Eval#     ENERgy      Delta-E         GRMS
+ENER INTERN:          BONDs       ANGLes       UREY-b    DIHEdrals    IMPRopers
+ENER CROSS:           CMAPs        PMF1D        PMF2D        PRIMO
+ENER EXTERN:        VDWaals         ELEC       HBONds          ASP         USER
+ENER IMAGES:        IMNBvdw       IMELec       IMHBnd       RXNField    EXTElec
+ENER EWALD:          EWKSum       EWSElf       EWEXcl       EWQCor       EWUTil
+ ----------       ---------    ---------    ---------    ---------    ---------
+ENER>        0-163043.99835      0.00000      5.02279
+ENER INTERN>     6337.99813   4236.12181     54.30685   1726.66813     21.86301
+ENER CROSS>       -21.48984      0.00000      0.00000      0.00000
+ENER EXTERN>    20161.20647-164737.82886      0.00000      0.00000      0.00000
+ENER IMAGES>      243.39096  -5318.48694      0.00000      0.00000      0.00000
+ENER EWALD>       4130.5989-1021718.0599  991839.7129       0.0000       0.0000
+"""
+charmm_energy = dict()
+charmm_energy['Bond'] = 6337.99813
+charmm_energy['Angle'] = 4236.12181 + 54.30685
+charmm_energy['Dihedral'] = 1726.66813 + 21.86301 + -21.48984
+charmm_energy['Nonbonded'] = 20161.20647 + -164737.82886 + 243.39096  -5318.48694 + 4130.5989 -1021718.0599 + 991839.7129
+charmm_energy['Total'] = -163043.99835
+
+total = 0.0
+for key in ['Bond', 'Angle', 'Dihedral', 'Nonbonded']:
+    total += charmm_energy[key]
+print(charmm_energy['Total'], total)
 omm_e = pmd.openmm.energy_decomposition_system(pmdparm, system)
 
+# OpenMM energy
+openmm_energy = dict()
+openmm_energy['Bond'] = omm_e[0][1]
+openmm_energy['Angle'] = omm_e[1][1] + omm_e[2][1]
+openmm_energy['Dihedral'] = omm_e[3][1] + omm_e[4][1] + omm_e[5][1]
+openmm_energy['Nonbonded'] = omm_e[6][1] + omm_e[7][1]
+openmm_energy['Total'] = openmm_energy['Bond'] + openmm_energy['Angle'] + openmm_energy['Dihedral'] + openmm_energy['Nonbonded']
+
 print('OpenMM Energy is %s' % omm_e)
+
+# Now do the comparisons
+print('%-20s | %-15s | %-15s' % ('Component', 'CHARMM', 'OpenMM'))
+print('-'*56)
+total = 0
+for name in ['Bond', 'Angle', 'Dihedral', 'Nonbonded']:
+    print('%-20s | %15.6f | %15.6f' % (name, charmm_energy[name], openmm_energy[name]))
+print('-'*56)
+print('%-20s | %15.6f | %15.6f' % ('Total', charmm_energy['Total'], openmm_energy['Total']))
+print('-'*56)

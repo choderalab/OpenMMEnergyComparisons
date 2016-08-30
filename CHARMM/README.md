@@ -65,5 +65,5 @@ docker run -i -t omnia/charmm-lite:c40b1 /bin/bash
 ```
 To run the comparison:
 ```
-docker run -i -v `pwd`/2koc-charmm-gui:/mnt -t omnia/charmm-lite:c40b1 /mnt/compute-energy.sh
+docker run -i -v `pwd`:/mnt -t omnia/charmm-lite:c40b1 /mnt/dhfr.sh
 ```
