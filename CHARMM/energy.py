@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import sys
 import parmed as pmd
 from simtk import openmm as mm, unit as u
@@ -85,22 +86,18 @@ print('Parsing CHARMM forces...')
 lines = charmm_output.split('\n')
 for index in range(len(lines)):
     if 'CHARMM>    print coor comp' in lines[index]:
-        print('FOUND')
-        print(lines[index+6])
         elements = lines[index+6].split()
-        print(elements)
         natoms = int(elements[0])
         firstline = index + 7
         break
-charmm_forces = np.zeros([natoms,3], np.float32)
+charmm_forces = np.zeros([natoms,3], np.float64)
 for (atom_index, line_index) in enumerate(range(firstline,firstline+natoms)):
     line = lines[line_index]
     elements = lines[line_index].split()
-    charmm_forces[atom_index,0] = float(elements[4])
-    charmm_forces[atom_index,1] = float(elements[5])
-    charmm_forces[atom_index,2] = float(elements[6])
+    charmm_forces[atom_index,0] = -float(elements[4])
+    charmm_forces[atom_index,1] = -float(elements[5])
+    charmm_forces[atom_index,2] = -float(elements[6])
 charmm_forces = u.Quantity(charmm_forces, u.kilocalories_per_mole / u.angstroms)
-print(charmm_forces)
 
 # Read box size and PME parameters
 """
@@ -141,8 +138,10 @@ psf = app.CharmmPsfFile(os.path.join(prefix, 'step3_pbcsetup.psf'))
 # Taken from output of CHARMM run
 psf.setBox(a, b, c)
 crd = app.CharmmCrdFile(os.path.join(prefix, 'step3_pbcsetup.crd'))
-params = app.CharmmParameterSet(os.path.join(prefix, 'toppar/par_all36_prot.prm'),
-                                os.path.join(prefix, 'toppar/toppar_water_ions.str'))
+params = app.CharmmParameterSet(
+    os.path.join(prefix, 'toppar/par_all36_prot.prm'),
+    os.path.join(prefix, 'toppar/par_all36_na.prm'),
+    os.path.join(prefix, 'toppar/toppar_water_ions.str'))
 
 system = psf.createSystem(params, nonbondedMethod=app.PME,
         nonbondedCutoff=12*u.angstroms, switchDistance=10*u.angstroms)
@@ -161,40 +160,12 @@ pmdparm = pmd.load_file(os.path.join(prefix,'step3_pbcsetup.psf'))
 pmdparm.positions = crd.positions
 pmdparm.box = [a/u.angstroms, b/u.angstroms, c/u.angstroms, 90, 90, 90]
 
-# Print PME parameters
+# Get OpenMM forces.
+force_unit = u.kilocalories_per_mole/u.angstroms
 integrator = mm.VerletIntegrator(1.0 * u.femtoseconds)
 context = mm.Context(system, integrator)
 context.setPositions(crd.positions)
-for force in system.getForces():
-    if isinstance(force, mm.NonbondedForce):
-        break
-integrator.step(1)
-print(force.getPMEParametersInContext(context))
-del context, integrator
-
-# CHARMM energy: From docker evaluation
-# TODO: Pull these components in with a Python script.
-"""
-ENER ENR:  Eval#     ENERgy      Delta-E         GRMS
-ENER INTERN:          BONDs       ANGLes       UREY-b    DIHEdrals    IMPRopers
-ENER CROSS:           CMAPs        PMF1D        PMF2D        PRIMO
-ENER EXTERN:        VDWaals         ELEC       HBONds          ASP         USER
-ENER IMAGES:        IMNBvdw       IMELec       IMHBnd       RXNField    EXTElec
-ENER EWALD:          EWKSum       EWSElf       EWEXcl       EWQCor       EWUTil
- ----------       ---------    ---------    ---------    ---------    ---------
-ENER>        0-163043.99835      0.00000      5.02279
-ENER INTERN>     6337.99813   4236.12181     54.30685   1726.66813     21.86301
-ENER CROSS>       -21.48984      0.00000      0.00000      0.00000
-ENER EXTERN>    20161.20647-164737.82886      0.00000      0.00000      0.00000
-ENER IMAGES>      243.39096  -5318.48694      0.00000      0.00000      0.00000
-ENER EWALD>       4130.5989-1021718.0599  991839.7129       0.0000       0.0000
-"""
-charmm_energy = dict()
-charmm_energy['Bond'] = 6337.99813
-charmm_energy['Angle'] = 4236.12181 + 54.30685
-charmm_energy['Dihedral'] = 1726.66813 + 21.86301 + -21.48984
-charmm_energy['Nonbonded'] = 20161.20647 + -164737.82886 + 243.39096  -5318.48694 + 4130.5989 -1021718.0599 + 991839.7129
-charmm_energy['Total'] = -163043.99835
+omm_forces = context.getState(getForces=True).getForces(asNumpy=True)
 
 # Form CHARMM energy components
 charmm_energy = dict()
@@ -203,7 +174,8 @@ charmm_energy['Angle'] = charmm_energy_components['ANGLes'] * u.kilocalories_per
 charmm_energy['Urey-Bradley'] = charmm_energy_components['UREY-b'] * u.kilocalories_per_mole
 charmm_energy['Dihedrals'] = charmm_energy_components['DIHEdrals'] * u.kilocalories_per_mole
 charmm_energy['Impropers'] = charmm_energy_components['IMPRopers'] * u.kilocalories_per_mole
-charmm_energy['CMAP'] = charmm_energy_components['CMAPs'] * u.kilocalories_per_mole
+if 'CMAPs' in charmm_energy_components:
+    charmm_energy['CMAP'] = charmm_energy_components['CMAPs'] * u.kilocalories_per_mole
 charmm_energy['Nonbonded'] = \
     + charmm_energy_components['VDWaals'] * u.kilocalories_per_mole \
     + charmm_energy_components['ELEC'] * u.kilocalories_per_mole \
@@ -217,7 +189,10 @@ charmm_energy['Total'] = charmm_energy_components['ENERgy'] * u.kilocalories_per
 
 
 total = 0.0 * u.kilocalories_per_mole
-force_terms = ['Bond', 'Angle', 'Urey-Bradley', 'Dihedrals', 'Impropers', 'CMAP', 'Nonbonded']
+if 'CMAPs' in charmm_energy_components:
+    force_terms = ['Bond', 'Angle', 'Urey-Bradley', 'Dihedrals', 'Impropers', 'CMAP', 'Nonbonded']
+else:
+    force_terms = ['Bond', 'Angle', 'Urey-Bradley', 'Dihedrals', 'Impropers', 'Nonbonded']
 for key in force_terms:
     total += charmm_energy[key]
 print(charmm_energy['Total'], total)
@@ -233,9 +208,12 @@ openmm_energy['Angle'] = omm_e[1][1]
 openmm_energy['Urey-Bradley'] = omm_e[2][1]
 openmm_energy['Dihedrals'] = omm_e[3][1]
 openmm_energy['Impropers'] = omm_e[4][1]
-openmm_energy['CMAP'] = omm_e[5][1]
+if 'CMAP' in force_terms:
+    openmm_energy['CMAP'] = omm_e[5][1]
 openmm_energy['Nonbonded'] = omm_e[6][1] + omm_e[7][1]
-openmm_energy['Total'] = openmm_energy['Bond'] + openmm_energy['Angle'] + openmm_energy['Urey-Bradley'] + openmm_energy['Dihedrals'] + openmm_energy['Impropers'] + openmm_energy['CMAP'] + openmm_energy['Nonbonded']
+openmm_energy['Total'] = 0.0 * u.kilojoules_per_mole
+for term in force_terms:
+    openmm_energy['Total'] += openmm_energy[term]
 
 print('OpenMM Energy is %s' % omm_e)
 
@@ -249,3 +227,21 @@ for name in force_terms:
 print('-'*56)
 print('%-20s | %15.2f | %15.2f' % ('Total', charmm_energy['Total'] / u.kilojoules_per_mole, openmm_energy['Total'] / u.kilojoules_per_mole))
 print('-'*56)
+
+# Compare forces
+proj = (charmm_forces * omm_forces).sum(axis=1) / (omm_forces * omm_forces).sum(axis=1)
+ref = np.sqrt((omm_forces**2).sum(axis=1))
+reldiff = np.sqrt(((charmm_forces - omm_forces)**2).sum(axis=1)) / ref
+maxdiff = reldiff.max()
+meandiff = reldiff.mean()
+mediandiff = np.median(reldiff)
+
+print('Max Relative F diff:    %15.6E' % maxdiff)
+print('Mean Relative F diff:   %15.6E' % meandiff)
+print('Median Relative F diff: %15.6E' % mediandiff)
+print('-'*56)
+print('Projection of Amber and OpenMM force:')
+print('-'*56)
+print('Average: %15.6f' % proj.mean())
+print('Min:     %15.6f' % proj.min())
+print('Max:     %15.6f' % proj.max())

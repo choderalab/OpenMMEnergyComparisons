@@ -61,4 +61,8 @@ nbonds atom vatom vswitch -
        ewald pmew fftx @fftx ffty @ffty fftz @fftz  kappa 0.45657567972 spline order 5
 
 energy
+
+coor force comp
+print coor comp
+
 stop
