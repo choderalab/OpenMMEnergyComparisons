@@ -102,9 +102,44 @@ for (atom_index, line_index) in enumerate(range(firstline,firstline+natoms)):
 charmm_forces = u.Quantity(charmm_forces, u.kilocalories_per_mole / u.angstroms)
 print(charmm_forces)
 
+# Read box size and PME parameters
+"""
+ SET XTLTYPE  = CUBIC
+ SET A = 80
+ SET B = 80
+ SET C = 80
+ SET ALPHA = 90.0
+ SET BETA  = 90.0
+ SET GAMMA = 90.0
+ SET FFTX     = 90
+ SET FFTY     = 90
+ SET FFTZ     = 90
+ SET POSID = POT
+ SET NEGID = CLA
+ SET XCEN = 0
+ SET YCEN = 0
+ SET ZCEN = 0
+"""
+infile = open(os.path.join(prefix, 'step3_pbcsetup.str'), 'r')
+lines = infile.readlines()
+for line in lines:
+    tokens = line.split()
+    if tokens[1] == 'A':
+        a = float(tokens[3]) * u.angstroms
+    if tokens[1] == 'B':
+        b = float(tokens[3]) * u.angstroms
+    if tokens[1] == 'C':
+        c = float(tokens[3]) * u.angstroms
+    if tokens[1] == 'FFTX':
+        fftx = int(tokens[3])
+    if tokens[1] == 'FFTY':
+        ffty = int(tokens[3])
+    if tokens[1] == 'FFTZ':
+        fftz = int(tokens[3])
+
 psf = app.CharmmPsfFile(os.path.join(prefix, 'step3_pbcsetup.psf'))
 # Taken from output of CHARMM run
-psf.setBox(8*u.nanometers, 8*u.nanometers, 8*u.nanometers) # NOTE: These are hard-coded!
+psf.setBox(a, b, c)
 crd = app.CharmmCrdFile(os.path.join(prefix, 'step3_pbcsetup.crd'))
 params = app.CharmmParameterSet(os.path.join(prefix, 'toppar/par_all36_prot.prm'),
                                 os.path.join(prefix, 'toppar/toppar_water_ions.str'))
@@ -121,10 +156,10 @@ for force in system.getForces():
         #print('NonbondedForce: %s' % force.getUseSwitchingFunction())
         #print('LRC? %s' % force.getUseDispersionCorrection())
         force.setUseDispersionCorrection(False)
-        force.setPMEParameters(1.0/0.34, 90, 90, 90) # NOTE: These are hard-coded!
+        force.setPMEParameters(1.0/0.34, fftx, ffty, fftz) # NOTE: These are hard-coded!
 pmdparm = pmd.load_file(os.path.join(prefix,'step3_pbcsetup.psf'))
 pmdparm.positions = crd.positions
-pmdparm.box = [80, 80, 80, 90, 90, 90]
+pmdparm.box = [a/u.angstroms, b/u.angstroms, c/u.angstroms, 90, 90, 90]
 
 # Print PME parameters
 integrator = mm.VerletIntegrator(1.0 * u.femtoseconds)
