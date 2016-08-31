@@ -1,17 +1,17 @@
 #!/usr/bin/env python
-
-prefix = 'dhfr' # Directory where CHARMM input files are stored
-
+import sys
 import parmed as pmd
 from simtk import openmm as mm, unit as u
 from simtk.openmm import app
 import numpy as np
 import os, re
 
+prefix = sys.argv[1] # Directory where CHARMM input files are stored
+
 # Run CHARMM energy and force calculation
 import subprocess
 print('Running CHARMM in docker container (may take a minute)...')
-command = "docker run -i -v `pwd`:/mnt -t omnia/charmm-lite:c40b1 /mnt/dhfr.sh"
+command = "docker run -i -v `pwd`:/mnt -t omnia/charmm-lite:c40b1 /mnt/%s.sh" % prefix
 charmm_output = subprocess.check_output(command, shell=True)
 
 # Parse CHARMM energy and force output
