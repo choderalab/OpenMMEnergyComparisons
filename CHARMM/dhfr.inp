@@ -58,6 +58,9 @@ nbonds atom vatom vswitch -
        ctonnb 10.0 ctofnb 12.0 cutnb 16.0 cutim 16.0 -
        inbfrq -1 imgfrq -1 wmin 1.0 cdie eps 1.0 -
        ewald pmew fftx @fftx ffty @ffty fftz @fftz  kappa .34 spline order 5
-!       ewald pmew fftx @fftx ffty @ffty fftz @fftz  kappa 0.45657567972 spline order 5 ! openmm
 energy
+
+coor force comp
+print coor comp
+
 stop
