@@ -39,3 +39,35 @@ there will be some changes, and only these are highlighted below.
 From the charmm-gui.tgz file, extract the ``toppar/`` directory, all of the
 ``step3_*`` files, ``namd/`` directory (if you plan on using NAMD to do energy
 comparisons), and the ``openmm/`` directory.
+
+CHARMM docker image
+===================
+
+Prerequisites
+-------------
+* [Docker toolbox](https://www.docker.com/products/docker-toolbox)
+* [CHARMM lite nonprofit/academic version](http://charmm.chemistry.harvard.edu/charmm_lite.php) (free) - downloaded as `charmm.tar.gz`
+
+Building the docker image
+-------------------------
+After starting the Docker daemon, run
+```
+docker build -t omnia/charmm-lite:c40b1 .
+```
+
+Running CHARMM
+--------------
+The CHARMM executable is `/charmm/c40b1_gnu/exec/gnu/charmm`
+
+To manually start the docker image (for testing purposes):
+```
+docker run -i -t omnia/charmm-lite:c40b1 /bin/bash
+
+Running comparison
+------------------
+```
+To run the comparison from this directory:
+```
+python energy.py dhfr
+python energy.py 2koc
+```
