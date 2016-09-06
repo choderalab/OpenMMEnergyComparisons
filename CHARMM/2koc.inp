@@ -6,21 +6,21 @@ DIMENS CHSIZE 2000000
 !DIMENS CHSIZE 1000000
 
 ! Read topology and parameter files
-stream toppar.str
+stream toppar/toppar.str
 
 ! Read PSF
-open read unit 10 card name step3_pbcsetup.psf
+open read unit 10 card name 2koc/step3_pbcsetup.psf
 read psf  unit 10 card xplor
 
 ! Read Coordinate
-open read unit 20 card name step3_pbcsetup.crd
+open read unit 20 card name 2koc/step3_pbcsetup.crd
 read coor unit 20 card
 
 !
 ! Setup PBC (Periodic Boundary Condition)
 !
 
-stream step3_pbcsetup.str
+stream 2koc/step3_pbcsetup.str
 
 !
 ! Previous box information
@@ -29,7 +29,7 @@ stream step3_pbcsetup.str
 !calc pcnt = @cnt - 1
 !if pcnt .gt. 0 then
 !    bomlev -5
-!    open read  unit 11 card name step5_@pcnt.rst
+!    open read  unit 11 card name 2koc/step5_@pcnt.rst
 !    read coor dynr curr unit 11
 !    bomlev  0
 !
@@ -42,7 +42,7 @@ stream step3_pbcsetup.str
 ! Image Setup
 !
 
-open read unit 30 card name crystal_image.str
+open read unit 30 card name 2koc/crystal_image.str
 CRYSTAL DEFINE @XTLtype @A @B @C @alpha @beta @gamma
 CRYSTAL READ UNIT 30 CARD
 
@@ -57,6 +57,12 @@ IMAGE BYRESID XCEN @xcen YCEN @ycen ZCEN @zcen sele ( segid @posid .or. segid @n
 nbonds atom vatom vswitch -
        ctonnb 10.0 ctofnb 12.0 cutnb 16.0 cutim 16.0 -
        inbfrq -1 imgfrq -1 wmin 1.0 cdie eps 1.0 -
-       ewald pmew fftx @fftx ffty @ffty fftz @fftz  kappa .34 spline order 5
+!       ewald pmew fftx @fftx ffty @ffty fftz @fftz  kappa .34 spline order 5
+       ewald pmew fftx @fftx ffty @ffty fftz @fftz  kappa 0.45657567972 spline order 5
+
 energy
+
+coor force comp
+print coor comp
+
 stop
