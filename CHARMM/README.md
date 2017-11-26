@@ -54,3 +54,20 @@ After starting the Docker daemon, run
 ```
 docker build -t omnia/charmm-lite:c40b1 .
 ```
+
+Running CHARMM
+--------------
+The CHARMM executable is `/charmm/c40b1_gnu/exec/gnu/charmm`
+
+To manually start the docker image (for testing purposes):
+```
+docker run -i -t omnia/charmm-lite:c40b1 /bin/bash
+
+Running comparison
+------------------
+```
+To run the comparison from this directory:
+```
+python energy.py dhfr
+python energy.py 2koc
+```
