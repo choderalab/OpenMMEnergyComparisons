@@ -13,7 +13,7 @@ prefix = sys.argv[1] # Directory where CHARMM input files are stored
 import subprocess
 print('Running CHARMM in docker container (may take a minute)...')
 command = "docker run -i -v `pwd`:/mnt -t omnia/charmm-lite:c40b1 /mnt/%s.sh" % prefix
-charmm_output = subprocess.check_output(command, shell=True)
+charmm_output = subprocess.check_output(command, shell=True, universal_newlines=True)
 
 # Parse CHARMM energy and force output
 """
